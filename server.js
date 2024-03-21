@@ -6,7 +6,7 @@ console.log(process.env.PASSWORD)
 // Connect to database
 const db = mysql.createConnection(
     {
-      host: 'localhost',
+      host: '127.0.0.1',
       // MySQL username,
       user: 'root',
       // TODO: Add MySQL password here
@@ -51,9 +51,14 @@ const db = mysql.createConnection(
   }
 
   function viewDepartments(){
-    db.query("SELECT * FROM department", (err,data)=>{
-        console.table(data)
-        menu()
+    db.query(`SELECT id, department_name AS Departments FROM departments`, (err,rows) => {
+      if (err) { 
+      console.log(err)
+      return;
+      }
+
+      console.table(rows)
+        menu();
     })
   };
 
@@ -72,7 +77,28 @@ const db = mysql.createConnection(
   };
 
   // add new department
-  
+  async function addDepartment() {
+    const res = await inquirer.prompt([
+      {
+        type: 'input',
+        message: 'What is the name of the new department?',
+        name: 'departmentName'
+      }
+    ])
+
+    let sql = `INSERT INTO department (department_name) VALUES (?)`;
+    let params = [res.departmentName];
+
+    db.query(sql, params, (err, rows) => {
+      if (err) {
+        console.log(err);
+        return;
+      };
+      console.log('Great Success! Department added.')
+      menu();
+    });
+    
+  }
 
 
 
