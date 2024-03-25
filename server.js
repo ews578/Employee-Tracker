@@ -81,9 +81,9 @@ function viewRoles() {
 function viewEmployees() {
   const sql = `SELECT e.id, e.first_name AS First, e.last_name AS Last, r.title AS Title, d.department_name AS Department, r.salary AS Salary, CONCAT(m.first_name, ' ', m.last_name) AS Manager
     FROM employee e
-    JOIN roles r ON e.role_id = r.id
+    JOIN role r ON e.role_id = r.id
     JOIN department d ON r.department_id = d.id
-    LEFT JOIN employees m ON e.manager_id = m.id`;
+    LEFT JOIN employee m ON e.manager_id = m.id`;
 
   db.query(sql, (err, rows) => {
     if (err) {
@@ -171,19 +171,14 @@ async function addEmployee() {
     },
     {
       type: 'input',
-      message: 'What department is employee asigned to?',
-      name: "department_id"
-    },
-    {
-      type: 'input',
       message: 'What is the new employee role ID?',
       name: 'role_id'
     },
-    {
-      type: 'input',
-      message: "What is the new employee's salary?",
-      name: 'salary'
-    },
+    // {
+    //   type: 'input',
+    //   message: 'What department is employee asigned to?',
+    //   name: "department_id"
+    // },
 
     {
       type: 'input',
@@ -192,7 +187,7 @@ async function addEmployee() {
     }
   ]);
 
-  let sql = `INSERT INTO employee (first_name, last_name,  department_id, role_id, salary, manager_id) VALUES (?, ?, ?, ?, ?, ?)`;
+  let sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
   let params = Object.values(res)
   console.log(params)
 
@@ -207,7 +202,50 @@ async function addEmployee() {
 }
 
 // update employee
+async function updateRole() {
+  db.query('SELECT * FROM employee', async (err, employee) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
 
+    const updateER = await inquirer.prompt ([
+      {
+        type: 'list',
+        message: 'Please select an employee to update',
+        choices: employee.map((e) => ({name: `${e.first_name} ${e.last_name}`, value: e.id })),
+        name: 'employee_id'
+      }
+    ]);
+
+    db.query('SELECT * FROM role', async (err, role) => {
+      if (err) {
+        console.log(err);
+          return;
+      }
+      const updateRole = await inquirer.prompt([
+        {
+          type: 'list',
+          message: 'Select the employee new role',
+          choices: role.map((r) => ({ name: r.title, value: r.id})),
+          name: 'role_id'
+        }
+      ]);
+      db.query(
+        'UPDATE employee SET role_id =? WHERE id =?',
+        [updateRole.role_id, updateER.employee_id],
+        (err,result) => {
+          if (err) {
+            console.log(err);
+            return;
+          }
+          console.log('Great Success! Employee role updated.')
+          menu();
+        }
+      );
+    });
+  });
+}
 
 
 
